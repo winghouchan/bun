@@ -3,6 +3,7 @@
  * `bunx jest mock-fn.test.js`
  */
 var { isBun, expect, jest, vi, mock, spyOn } = require("./test-interop.js")();
+var fixtures = require("./mock-fn.fixture");
 
 // if you want to test vitest, comment the above and uncomment the below
 
@@ -615,6 +616,25 @@ describe("spyOn", () => {
     expect(fn).toBe(obj.original);
     expect(fn2).toBe(fn);
     expect(fn).not.toBe(_original);
+  });
+
+  test("works on imported functions", () => {
+    const fn = spyOn(fixtures, "fn");
+    expect(fn).toBe(fixtures.fn);
+    expect(fn).not.toHaveBeenCalled();
+    expect(() => expect(fn).toHaveBeenCalled()).toThrow();
+    expect(fixtures.fn()).toBe(42);
+    expect(fn).toHaveBeenCalled();
+    expect(fn).toHaveBeenCalledTimes(1);
+    expect(() => expect(fn).not.toHaveBeenCalled()).toThrow();
+    expect(() => expect(fn).not.toHaveBeenCalledTimes(1)).toThrow();
+    expect(fn.mock.calls).toHaveLength(1);
+    expect(fn.mock.calls[0]).toBeEmpty();
+    jest.restoreAllMocks();
+    expect(() => expect(fixtures.fn).toHaveBeenCalled()).toThrow();
+    expect(fn).not.toHaveBeenCalled();
+    expect(fixtures.fn()).toBe(42);
+    expect(fn).not.toHaveBeenCalled();
   });
 
   // spyOn does not work with getters/setters yet.
